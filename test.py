@@ -4,14 +4,11 @@ import warnings
 from itertools import combinations
 
 import Levenshtein
-from absl import logging
 
-logging.set_verbosity(logging.ERROR)
 warnings.simplefilter("ignore")
 
 stdout, sys.stdout = sys.stdout, StringIO()
 import synonyms
-sys.stdout = stdout
 
 fns = sys.argv[1:]
 
@@ -29,17 +26,19 @@ for fn in fns:
         dist = Levenshtein.distance(seq1, seq2)
         if dist < 2 and min_len > 2:
             errors += 1
-            print("\n".join(
-                [f"{fn}:{idx1}:{idx2}: ERROR: Duplicate sentences", seq1, seq2, f"(distance={dist})"]))
+            sys.stderr.write("\n".join(
+                [f"{fn}:{idx1}:{idx2}: ERROR: Duplicate sentences", seq1, seq2, f"(distance={dist})", ""]))
         elif dist < 6:
             sim = synonyms.compare(seq1, seq2)
             if sim > 0.9:
                 warns += 1
-                print("\n".join([f"{fn}:{idx1}:{idx2}: WARNING: Possible duplicate sentences",
-                                 seq1, seq2, f"(distance={dist}, similarity={sim})"]))
+                sys.stderr.write("\n".join([f"{fn}:{idx1}:{idx2}: WARNING: Possible duplicate sentences",
+                                 seq1, seq2, f"(distance={dist}, similarity={sim})", ""]))
 
-print("-"*10)
-print(f"Total: {errors} error(s). {warns} warning(s).")
+sys.stderr.write("-"*10 + "\n")
+sys.stderr.write(f"Total: {errors} error(s). {warns} warning(s).\n")
+
+sys.stdout = stdout
 
 if errors > 0:
     exit(1)
